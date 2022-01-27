@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>FiParcel!</title>
+	<style type="text/css">
+		body {
+			background-color: aqua;
+		}
+		#intro {
+		    background-color: black;
+		    color: wheat;
+		    border: 3px dotted;
+		}
+		.verticalCenter {
+		    width: fit-content;
+		    margin: 10px auto;
+		    padding: 10px;
+		}
+		#container {
+			width: 80%;
+			height: 60%;
+			background-color: white;
+			position: absolute;
+			left:  0;
+			right:  0;
+			top:  0;
+			bottom: 0;
+			margin: auto;
+			border-radius: 25px;
+			overflow: auto;
+		}
+		#container ul {
+			list-style: none;
+		}
+		#filesList li {
+			margin: 25px;
+			font-size: larger;
+			font-family: arial;
+			background-color: #eee;
+		}
+		#filesList li ul {
+			display: inline-block;
+			width: calc(100% - 40px);
+		}
+		#filesList li button {
+			display: none;
+			padding: 0;
+		}
+		#filesList li button:after {
+			width: calc(15% - 68px);
+			content: "\00d7";
+			font-size: xx-large;
+			background-color: red;
+		}
+		#filesList li ul li{
+			margin: 5px;
+		}
+		#options button {
+			background-color: black;
+			color: white;
+			border-radius: 10px;
+			margin: 10px; font-size: xx-large;
+			border-radius: 25px;
+			padding: 2px 10px 2px 10px
+		}
+		#dialog {
+			position: absolute;
+		    top: 0;
+		    left: 0;
+		    right: 0;
+		    bottom: 0;
+		    width: 65%;
+		    height: fit-content;
+		    height: -moz-fit-content;
+		    background-color: grey;
+		    margin: auto;
+		    padding: 25px;
+		    border:  2px solid black;
+		    display: none;
+		}
+		#prompt {
+			display: none;			
+		}
+	</style>
+	<script type="text/javascript">
+		let files=[];
+		function showFileSelectDialog() {
+			let filehooser=document.getElementById("fileChooser");
+			fileChooser.click();
+		}
+		function addFile(e) {
+			let chosenFiles=e.target.files;
+			for(let file of chosenFiles) {
+				files.push(file);
+
+				let li=document.createElement("li");
+
+				//Make ul
+				let ul=document.createElement("ul");
+				let fileName=document.createElement("li");
+				fileName.appendChild(document.createTextNode(file.name));
+				let fileSize=document.createElement("li");
+				let fs=file.size/(1024*1024);
+				fs=+fs.toFixed(2);
+				fileSize.appendChild(document.createTextNode(fs+" MB"));
+				ul.appendChild(fileName);
+				ul.appendChild(fileSize);
+
+				//Make Remove Button
+				let btn=document.createElement("button");
+
+				//Add to list item
+				li.appendChild(ul);
+				li.appendChild(btn);
+
+				//Add to list
+				document.getElementById("filesList").appendChild(li);
+			}
+		}
+
+		function uploadFiles() {
+			document.getElementById("dialog").style.display="block";
+			document.getElementById("completed").innerText="0";
+			document.getElementById("total").innerText=files.length;
+			let completed=0;
+			for(let file of files) {
+				let formData=new FormData();
+				formData.append("file", file);
+				let xhttp=new XMLHttpRequest();
+				xhttp.open("POST", "/recieve", true);
+				xhttp.onload=function() {
+					completed++;
+					document.getElementById("completed").innerText=completed;
+					if(completed==files.length) {
+						document.getElementById("progress").style.display="none";
+						document.getElementById("prompt").style.display="block";
+					}
+				}
+				xhttp.send(formData);
+				
+			}
+		}
+	</script>
+	<script type="text/javascript" defer>
+		window.onload=function() {
+			let diffHeight=document.getElementById("label").clientHeight+document.getElementById("options").clientHeight+32+50;
+			document.getElementById("filesList").style.height="calc(100% - "+diffHeight+"px";
+		}
+	</script>
+</head>
+<body>
+	<h1 id="intro" class="verticalCenter">FiParcel</h1>
+	<h2 class="verticalCenter">Files to ${DEVICE_NAME}</h2>
+	<div id="container">
+		<h2 id="label" style="margin: 25px;">Files to upload</h2>
+		<ul id="filesList" style="overflow: auto;">
+		</ul>
+		<div id="options" style="text-align: center; display: block;">
+			<form id="fileSelector"style="display: none;">
+				<input type="file" name="fileChooser" id="fileChooser" multiple="multiple" onchange="addFile(event)">
+			</form>
+			<button onclick="showFileSelectDialog();">Add File</button>
+			<button onclick="uploadFiles()">Upload</button>
+		</div>
+	</div>
+	<div id="dialog">
+		<h1 style="background-color: black; color: white; padding: 5px;">Progress</h1>
+		<div id="progress">
+			<span id="completed"></span> completed of <span id="total"></span>
+		</div>
+		<div id="prompt">
+			Files uploaded successfully!
+			<div style="text-align: center;">
+				<button style="margin: auto; font-size: x-large; background-color: antiquewhite;" onclick="window.location.reload()">OK</button>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
